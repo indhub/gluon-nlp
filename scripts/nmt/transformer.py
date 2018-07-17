@@ -98,11 +98,15 @@ class PositionwiseFFN(HybridBlock):
         outputs : Symbol or NDArray
             Shape (batch_size, length, C_out)
         """
+        print("PFFN input: %s" % str(inputs.shape))
         outputs = self.ffn_1(inputs)
+        print("PFFN ffn_1 out: %s" % str(outputs.shape))
         outputs = self.ffn_2(outputs)
+        print("PFFN ffn_2 out: %s" % str(outputs.shape))
         outputs = self.dropout_layer(outputs)
         if self._use_residual:
             outputs = outputs + inputs
+            print("PFFN res out: %s" % str(outputs.shape))
         outputs = self.layer_norm(outputs)
         return outputs
 
@@ -447,7 +451,7 @@ class TransformerEncoder(HybridBlock, Seq2SeqEncoder):
         length = inputs.shape[1]
         if valid_length is not None:
             mask = mx.nd.broadcast_lesser(
-                mx.nd.arange(length, ctx=valid_length.context).reshape((1, -1)),
+                mx.nd.arange(length, ctx=valid_length.context, dtype='float32').reshape((1, -1)),
                 valid_length.reshape((-1, 1)))
             mask = mx.nd.broadcast_axes(mx.nd.expand_dims(mask, axis=1), axis=1, size=length)
             if states is None:
@@ -610,7 +614,7 @@ class TransformerDecoder(HybridBlock, Seq2SeqDecoder):
         mem_length = mem_value.shape[1]
         if encoder_valid_length is not None:
             mem_masks = mx.nd.broadcast_lesser(
-                mx.nd.arange(mem_length, ctx=encoder_valid_length.context).reshape((1, -1)),
+                mx.nd.arange(mem_length, ctx=encoder_valid_length.context, dtype='float32').reshape((1, -1)),
                 encoder_valid_length.reshape((-1, 1)))
             decoder_states.append(mem_masks)
         self._encoder_valid_length = encoder_valid_length

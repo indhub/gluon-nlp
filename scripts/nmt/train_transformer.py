@@ -43,6 +43,7 @@ import logging
 import math
 import numpy as np
 import mxnet as mx
+from mxnet import nd
 from mxnet import gluon
 from mxnet.gluon.data import ArrayDataset, SimpleDataset
 from mxnet.gluon.data import DataLoader
@@ -338,7 +339,7 @@ model = NMTModel(src_vocab=src_vocab, tgt_vocab=tgt_vocab, encoder=encoder, deco
                  embed_initializer=None, prefix='transformer_')
 model.initialize(init=mx.init.Xavier(magnitude=args.magnitude), ctx=ctx)
 static_alloc = True
-model.hybridize(static_alloc=static_alloc)
+#model.hybridize(static_alloc=static_alloc)
 logging.info(model)
 
 translator = BeamSearchTranslator(model=model, beam_size=args.beam_size,
@@ -348,13 +349,13 @@ translator = BeamSearchTranslator(model=model, beam_size=args.beam_size,
 logging.info('Use beam_size={}, alpha={}, K={}'.format(args.beam_size, args.lp_alpha, args.lp_k))
 
 label_smoothing = LabelSmoothing(epsilon=args.epsilon, units=len(tgt_vocab))
-label_smoothing.hybridize(static_alloc=static_alloc)
+#label_smoothing.hybridize(static_alloc=static_alloc)
 
 loss_function = SoftmaxCEMaskedLoss(sparse_label=False)
-loss_function.hybridize(static_alloc=static_alloc)
+#loss_function.hybridize(static_alloc=static_alloc)
 
 test_loss_function = SoftmaxCEMaskedLoss()
-test_loss_function.hybridize(static_alloc=static_alloc)
+#test_loss_function.hybridize(static_alloc=static_alloc)
 
 detokenizer = NLTKMosesDetokenizer()
 
@@ -502,6 +503,8 @@ def train():
         log_start_time = time.time()
         for batch_id, (src_seq, tgt_seq, src_valid_length, tgt_valid_length) \
                 in enumerate(train_data_loader):
+            src_valid_length = nd.cast(src_valid_length, dtype='float32')
+            tgt_valid_length = nd.cast(tgt_valid_length, dtype='float32')
             if batch_id % grad_interval == 0:
                 step_num += 1
                 new_lr = args.lr / math.sqrt(args.num_units) \

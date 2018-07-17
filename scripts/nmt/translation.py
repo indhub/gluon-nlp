@@ -26,6 +26,7 @@ import numpy as np
 from mxnet.gluon import Block
 from mxnet.gluon import nn
 import mxnet as mx
+from mxnet import nd
 from gluonnlp.model import BeamSearchScorer, BeamSearchSampler
 
 
@@ -227,6 +228,8 @@ class NMTModel(Block):
         additional_outputs : list of list
             Additional outputs of encoder and decoder, e.g, the attention weights
         """
+        src_valid_length = nd.cast(src_valid_length, dtype='float32')
+        tgt_valid_length = nd.cast(tgt_valid_length, dtype='float32')
         additional_outputs = []
         encoder_outputs, encoder_additional_outputs = self.encode(src_seq,
                                                                   valid_length=src_valid_length)
